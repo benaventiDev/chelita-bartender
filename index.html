@@ -35,9 +35,11 @@
       height: 50vh;
       margin-top: 2vh;
       margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
     }
     .card-inner {
-      position: relative;
+      position: absolute;
       width: 100%;
       height: 100%;
       transition: transform 0.6s;
@@ -57,15 +59,46 @@
       border-radius: 20px;
       box-shadow: 0 6px 25px rgba(255, 193, 7, 0.2);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 1.5rem;
       text-align: center;
       font-size: 1.5rem;
       box-sizing: border-box;
+      position: absolute;
+      color: #ffe082;
+    }
+    .card-face.card-front::after {
+      content: 'Tap to see the answer';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
+    }
+    .card-face.card-back::after {
+      content: 'Tap to see the question';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
     }
     .card-back {
       transform: rotateY(180deg);
+    }
+    .slide-left {
+      animation: slideLeft 0.3s ease forwards;
+    }
+    .slide-right {
+      animation: slideRight 0.3s ease forwards;
+    }
+    @keyframes slideLeft {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(-100%); opacity: 0; }
+    }
+    @keyframes slideRight {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(100%); opacity: 0; }
     }
     .navigation {
       width: 100%;
@@ -74,6 +107,15 @@
       flex-direction: column;
       gap: 0.8rem;
       margin-bottom: 5vh;
+    }
+    .next-btn,
+    .prev-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .next-btn:active,
+    .prev-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
     }
     .next-btn {
       width: 100%;
@@ -86,7 +128,6 @@
       font-weight: bold;
       box-shadow: 0 3px 15px rgba(255, 87, 34, 0.5);
       cursor: pointer;
-      transition: background 0.3s;
     }
     .next-btn:hover {
       background: linear-gradient(to right, #b71c1c, #e65100);
@@ -101,7 +142,6 @@
       background: #37474f;
       color: #fff9c4;
       cursor: pointer;
-      transition: background 0.3s;
     }
     .prev-btn:hover {
       background: #263238;
@@ -125,11 +165,10 @@
     </div>
   </div>
   <div class="navigation">
-    <button class="next-btn" onclick="nextCard()">Next →</button>
-    <button class="prev-btn" onclick="prevCard()">← Back</button>
+    <button class="next-btn" onclick="nextCard(this)">Next →</button>
+    <button class="prev-btn" onclick="prevCard(this)">← Back</button>
   </div>
-
-  <div class="footer-message">Para la mas enojona<br>Love you marica</div>
+  <div class="footer-message">I love you</div>
 
   <script>
     let flashcards = [
@@ -183,17 +222,14 @@
 { question: "A Freddy Fudpucker is a Tequila-based drink filled with Orange Juice and a float of _____.", answer: "Galliano" }, 
 { question: "What are the ingredients for a French 75?", answer: "Gin, Lemon Juice, Simple Syrup, and Sparkling Wine." }, 
 { question: "What two spirits are combined to make a French Connection I (or a 'Beautiful')?", answer: "Grand Marnier and Cognac." }
-      
     ];
 
-    // Shuffle the flashcards array once at the start
     flashcards = flashcards.sort(() => Math.random() - 0.5);
 
     let currentIndex = 0;
     const flashcard = document.getElementById("flashcard");
     const questionEl = document.getElementById("question");
     const answerEl = document.getElementById("answer");
-    const cardInner = flashcard.querySelector('.card-inner');
 
     function renderCard() {
       const card = flashcards[currentIndex];
@@ -202,17 +238,28 @@
       flashcard.classList.remove("flipped");
     }
 
-    function prevCard() {
-      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
-      renderCard();
+    function slideAndRender(direction) {
+      const animationClass = direction === 'left' ? 'slide-left' : 'slide-right';
+      flashcard.classList.add(animationClass);
+
+      setTimeout(() => {
+        renderCard();
+        flashcard.classList.remove(animationClass);
+      }, 300);
     }
 
-    function nextCard() {
+    function prevCard(btn) {
+      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+      slideAndRender('right');
+    }
+
+    function nextCard(btn) {
       currentIndex = (currentIndex + 1) % flashcards.length;
-      renderCard();
+      slideAndRender('left');
     }
 
     flashcard.addEventListener("click", () => {
+      const inner = flashcard.querySelector('.card-inner');
       flashcard.classList.toggle("flipped");
     });
 

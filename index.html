@@ -168,7 +168,7 @@
     <button class="next-btn" onclick="nextCard(this)">Next →</button>
     <button class="prev-btn" onclick="prevCard(this)">← Back</button>
   </div>
-  <div class="footer-message">Para la mas enojona.<br>Love you marica</div>
+  <div class="footer-message">I love you</div>
 
   <script>
     let flashcards = [
@@ -261,6 +261,26 @@
     flashcard.addEventListener("click", () => {
       const inner = flashcard.querySelector('.card-inner');
       flashcard.classList.toggle("flipped");
+    });
+
+    // Swipe gesture handling
+    let touchStartX = null;
+    flashcard.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    flashcard.addEventListener("touchend", (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX !== null) {
+        const deltaX = touchEndX - touchStartX;
+        if (Math.abs(deltaX) > 50) {
+          if (deltaX > 0) {
+            prevCard(); // swipe right
+          } else {
+            nextCard(); // swipe left
+          }
+        }
+      }
+      touchStartX = null;
     });
 
     renderCard();

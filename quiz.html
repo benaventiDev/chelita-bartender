@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #2c003e, #000000);
+      padding: 1rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+    h2 {
+      margin-top: 0.5rem;
+      margin-bottom: 0.2rem;
+      font-size: 2rem;
+      color: #ffca28;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+    h3 {
+      margin-top: 0.2rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      color: #fff59d;
+      font-weight: normal;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
+    }
+
+    .card {
+      perspective: 1000px;
+      width: calc(100% - 2rem);
+      max-width: 400px;
+      height: 50vh;
+      margin-top: 2vh;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+
+    .flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: radial-gradient(circle, #212121, #000000);
+      border: 2px solid #ffc107;
+      border-radius: 20px;
+      box-shadow: 0 6px 25px rgba(255, 193, 7, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.2rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .navigation {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 5vh;
+    }
+
+    .next-btn,
+    .prev-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .next-btn:active,
+    .prev-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .next-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.3rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #d50000, #ff6d00);
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 3px 15px rgba(255, 87, 34, 0.5);
+      cursor: pointer;
+    }
+
+    .prev-btn {
+      width: 60%;
+      margin: 0 auto;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #37474f;
+      color: #fff9c4;
+      cursor: pointer;
+    }
+
+    .option-btn {
+      margin: 0.3rem 0;
+      padding: 0.6rem;
+      width: 100%;
+      border-radius: 8px;
+      background: #424242;
+      color: #ffe082;
+      border: 1px solid #ffc107;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s ease;
+    }
+
+    .option-btn:hover {
+      background: #555555;
+    }
+
+    #feedbackText.correct {
+      color: #8bc34a;
+    }
+    #feedbackText.incorrect {
+      color: #ef5350;
+    }
+  </style>
+</head>
+<body>
+  <h2>Quiz Time</h2>
+  <h3 id="questionTitle">Question</h3>
+
+  <div class="card" id="quizCard">
+    <div class="card-inner" id="cardInner">
+      <!-- FRONT -->
+      <div class="card-face card-front" id="frontSide">
+        <p id="questionText">Loading question...</p>
+        <div id="optionsContainer"></div>
+      </div>
+
+      <!-- BACK -->
+      <div class="card-face card-back" id="backSide">
+        <p id="backQuestionText"></p>
+        <p id="chosenAnswer"></p>
+        <p id="feedbackText"></p>
+        <button class="option-btn" id="retryButton">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button class="next-btn" id="nextBtn">Next →</button>
+    <button class="prev-btn" id="prevBtn">← Back</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Which ingredient is used in a Margarita?",
+        options: [
+          { text: "Vodka", feedback: "Incorrect. Vodka belongs in a Cosmopolitan, not a Margarita." },
+          { text: "Tequila", feedback: "Correct! Tequila is the main spirit in a Margarita." },
+          { text: "Rum", feedback: "Incorrect. Rum is the base for Daiquiris, not Margaritas." },
+          { text: "Whiskey", feedback: "Incorrect. Whiskey is used in drinks like the Old Fashioned." }
+        ],
+        correctIndex: 1
+      },
+      {
+        question: "What juice is mixed with Champagne in a Mimosa?",
+        options: [
+          { text: "Cranberry Juice", feedback: "Incorrect. That combination is called a Poinsettia." },
+          { text: "Orange Juice", feedback: "Correct! A Mimosa is Champagne with Orange Juice." },
+          { text: "Pineapple Juice", feedback: "Incorrect. That makes a different tropical cocktail." },
+          { text: "Tomato Juice", feedback: "Incorrect. That would be more like a Bloody Mary." }
+        ],
+        correctIndex: 1
+      }
+    ];
+
+    let currentIndex = 0;
+    let chosenIndex = null;
+    const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
+
+    const questionTitle = document.getElementById('questionTitle');
+    const questionText = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const card = document.getElementById('quizCard');
+    const cardInner = document.getElementById('cardInner');
+    const backQuestionText = document.getElementById('backQuestionText');
+    const chosenAnswerEl = document.getElementById('chosenAnswer');
+    const feedbackText = document.getElementById('feedbackText');
+    const retryButton = document.getElementById('retryButton');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+
+    // --- Audio ---
+    function speak(text) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      window.speechSynthesis.speak(utter);
+    }
+
+    // --- Render Question ---
+    function renderQuestion() {
+      const q = shuffledQuestions[currentIndex];
+      questionTitle.textContent = `Question ${currentIndex + 1}`;
+      questionText.textContent = q.question;
+
+      optionsContainer.innerHTML = "";
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.classList.add("option-btn");
+        btn.textContent = opt.text;
+        btn.onclick = () => {
+          speak(opt.text);
+          setTimeout(() => selectAnswer(idx), 400);
+        };
+        optionsContainer.appendChild(btn);
+      });
+
+      questionText.onclick = () => speak(q.question);
+      card.classList.remove("flipped");
+      cardInner.style.transform = "translateX(0)";
+    }
+
+    // --- Select Answer ---
+    function selectAnswer(idx) {
+      const q = shuffledQuestions[currentIndex];
+      chosenIndex = idx;
+      backQuestionText.textContent = q.question;
+      backQuestionText.onclick = () => speak(q.question);
+      chosenAnswerEl.textContent = `Your answer: ${q.options[idx].text}`;
+      chosenAnswerEl.onclick = () => speak(q.options[idx].text);
+      feedbackText.textContent = q.options[idx].feedback;
+
+      if (idx === q.correctIndex) {
+        feedbackText.className = "correct";
+        retryButton.textContent = "Flip Back";
+      } else {
+        feedbackText.className = "incorrect";
+        retryButton.textContent = "Try Again";
+      }
+      card.classList.add("flipped");
+    }
+
+    retryButton.onclick = () => {
+      const q = shuffledQuestions[currentIndex];
+      const correct = chosenIndex === q.correctIndex;
+      if (correct) card.classList.remove("flipped");
+      else renderQuestion();
+    };
+
+    // --- Navigation buttons ---
+    nextBtn.onclick = () => { moveToQuestion("next"); };
+    prevBtn.onclick = () => { moveToQuestion("prev"); };
+
+    function moveToQuestion(direction) {
+      if (direction === "next") {
+        currentIndex = (currentIndex + 1) % shuffledQuestions.length;
+      } else {
+        currentIndex = (currentIndex - 1 + shuffledQuestions.length) % shuffledQuestions.length;
+      }
+      renderQuestion();
+    }
+
+    // --- Swipe logic ---
+    let startX = null;
+    let deltaX = 0;
+    let swiping = false;
+    let isSwiping = false;
+
+    card.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      cardInner.style.transition = "none";
+      swiping = true;
+      isSwiping = false;
+    });
+
+    card.addEventListener("touchmove", (e) => {
+      if (!swiping) return;
+      deltaX = e.touches[0].clientX - startX;
+      cardInner.style.transform = `translateX(${deltaX}px)`;
+      if (Math.abs(deltaX) > 10) isSwiping = true;
+    });
+
+    card.addEventListener("touchend", () => {
+      if (!swiping) return;
+      swiping = false;
+      const threshold = 120;
+      cardInner.style.transition = "transform 0.3s ease";
+
+      if (Math.abs(deltaX) > threshold) {
+        const direction = deltaX > 0 ? "right" : "left";
+        cardInner.style.transform = `translateX(${direction === "right" ? "100%" : "-100%"})`;
+
+        setTimeout(() => {
+          if (direction === "right") moveToQuestion("prev");
+          else moveToQuestion("next");
+
+          cardInner.style.transition = "none";
+          cardInner.style.transform = `translateX(${direction === "right" ? "-100%" : "100%"})`;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              cardInner.style.transition = "transform 0.3s ease";
+              cardInner.style.transform = "translateX(0)";
+            });
+          });
+        }, 300);
+      } else {
+        cardInner.style.transform = "translateX(0)";
+      }
+
+      deltaX = 0;
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>

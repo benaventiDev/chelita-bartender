@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #2c003e, #000000);
+      padding: 1rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+    h2 {
+      margin-top: 0.5rem;
+      margin-bottom: 0.2rem;
+      font-size: 2rem;
+      color: #ffca28;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+    h3 {
+      margin-top: 0.2rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      color: #fff59d;
+      font-weight: normal;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
+      transition: opacity 0.3s ease;
+    }
+    .card {
+      perspective: 1000px;
+      width: calc(100% - 2rem);
+      max-width: 400px;
+      height: 50vh;
+      margin-top: 2vh;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      touch-action: pan-y;
+      user-select: none;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+    .flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: radial-gradient(circle, #212121, #000000);
+      border: 2px solid #ffc107;
+      border-radius: 20px;
+      box-shadow: 0 6px 25px rgba(255, 193, 7, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+    .card-front::after {
+      content: 'Tap to see the answer';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
+      pointer-events: none;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    .card-back::after {
+      content: 'Tap to see the question';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
+      pointer-events: none;
+    }
+    .navigation {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 5vh;
+    }
+    .next-btn,
+    .prev-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .next-btn:active,
+    .prev-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+    .next-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.3rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #d50000, #ff6d00);
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 3px 15px rgba(255, 87, 34, 0.5);
+      cursor: pointer;
+    }
+    .next-btn:hover {
+      background: linear-gradient(to right, #b71c1c, #e65100);
+    }
+    .prev-btn {
+      width: 60%;
+      margin: 0 auto;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #37474f;
+      color: #fff9c4;
+      cursor: pointer;
+    }
+    .prev-btn:hover {
+      background: #263238;
+    }
+    .footer-message {
+      position: fixed;
+      bottom: 8px;
+      right: 12px;
+      font-size: 0.7rem;
+      color: #ffffffcc;
+      opacity: 0.6;
+    }
+    .home-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;           /* or left: 1rem; if you prefer */
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #ffc107;
+  color: #ffc107;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+  transition: background 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+}
+.home-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+.home-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #ffc107;
+}
+
+  </style>
+</head>
+<body>
+  <div class="home-btn" onclick="location.href='index.html'">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+</div>
+
+  <h2>Card Practice</h2>
+  <h3 id="cardTitle">Drink Title</h3>
+  <div class="card" id="flashcard">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front" id="question">Loading...</div>
+      <div class="card-face card-back" id="answer">Answer</div>
+    </div>
+  </div>
+  <div class="navigation">
+    <button class="next-btn" onclick="nextCard(this)">Next →</button>
+    <button class="prev-btn" onclick="prevCard(this)">← Back</button>
+  </div>
+
+
+  <script>
+    let flashcards = [
+      { title: "Adios", question: "What are the ingredients for an Adios cocktail?", answer: "Vodka, Rum, Gin, Tequila, Blue Curacao, and Sweet & Sour." }, 
+{ title: "Alabama Slammer", question: "List the ingredients for an Alabama Slammer.", answer: "Sloe Gin, Southern Comfort, Amaretto, and Orange Juice." }, 
+{ title: "Almond Joy", question: "What three ingredients are shaken to make an Almond Joy?", answer: "Amaretto, Dark Creme de Cacao, and Cream." }, 
+{ title: "Americano", question: "How do you build an Americano cocktail?", answer: "Pour Campari Liqueur and Sweet Vermouth, then fill with Soda Water." }, 
+{ title: "Aperol Spriz", question: "What are the three components of an Aperol Spritz?", answer: "Prosecco, Aperol, and Soda Water." }, 
+{ title: "Apple Martini", question: "List the ingredients for an Apple Martini.", answer: "Vodka, Apple Pucker, and a dash of Sweet & Sour." }, 
+{ title: "Aviation Cocktail", question: "What are the ingredients in an Aviation Cocktail?", answer: "Gin, Lemon Juice, Maraschino Liqueur, and Creme de Violette." }, 
+{ title: "B-52", question: "What three liqueurs are layered in a B-52?", answer: "Kahlua, Baileys, and Grand Marnier." }, 
+{ title: "Bee's Knees", question: "How do you make a Bee's Knees cocktail?", answer: "Shake Gin, Lemon Juice, and Honey, then strain." }, 
+{ title: "Bellini", question: "A Bellini is made by combining Peach Juice (Nectar) and filling the glass with _____.", answer: "Champagne" }, 
+{ title: "Bijou", question: "What are the ingredients for a Bijou cocktail?", answer: "Gin, Sweet Vermouth, Green Chartreuse, and a dash of Orange Bitters." }, 
+{ title: "Between the Sheets", question: "List the ingredients for a Between the Sheets cocktail.", answer: "Cognac, Rum, Triple Sec, and Lemon Juice." }, 
+{ title: "Black Russian", question: "A Black Russian is a simple cocktail made with what two ingredients?", answer: "Vodka and Kahlua." }, 
+{ title: "Blinker", question: "What are the ingredients in a Blinker cocktail?", answer: "Bourbon, Grapefruit Juice, Raspberry Syrup, and a dash of Peychaud's bitters." }, 
+{ title: "Blood and Sand", question: "How do you make a Blood and Sand cocktail?", answer: "Shake Scotch, Sweet Vermouth, Orange Juice, and Cherry Heering, then strain." }, 
+{ title: "Bloody Cesar vs Bloody Mary", question: "What is the key difference in the mix for a Bloody Caesar compared to a Bloody Mary?", answer: "A Bloody Caesar uses Clamato Juice instead of Tomato Juice." }, 
+{ title: "Bloody Mary", question: "What base spirit is used in a Bloody Maria?", answer: "Tequila." }, 
+{ title: "Bloody Mary", question: "List the core ingredients for a Bloody Mary.", answer: "Vodka, Tomato Juice, Salt/Pepper/Tabasco, and a dash of Worcestershire." }, 
+{ title: "Blue Hawaiian", question: "A Blue Hawaiian is made with Rum, Blue Curacao, and filled with _____.", answer: "Pineapple Juice" }, 
+{ title: "Boulevardier", question: "What are the three equal-parts ingredients of a Boulevardier?", answer: "Bourbon, Sweet Vermouth, and Campari Liqueur." }, 
+{ title: "Box Car", question: "What are the ingredients for a Box Car cocktail?", answer: "Rum, Triple Sec, Lemon Juice, and Simple Syrup." }, 
+{ title: "Brian Hemorrhage", question: "How is a Brain Hemorrhage shot prepared?", answer: "Layer Peach Schnapps, then Baileys, and add a dash of Grenadine." }, 
+{ title: "Bramble", question: "List the ingredients for a Bramble cocktail.", answer: "Gin, Lemon Juice, Simple Syrup, and Creme de Cassis." }, 
+{ title: "Brandy Alexander", question: "What are the three ingredients in a Brandy Alexander?", answer: "Brandy, Dark Creme de Cacao, and Cream." }, 
+{ title: "Brave Bull", question: "A Brave Bull is the Tequila-based version of a Black Russian. What are its ingredients?", answer: "Tequila and Kahlua." }, 
+{ title: "Bronx Cocktail", question: "List the ingredients for a Bronx Cocktail.", answer: "Gin, Orange Juice, Sweet Vermouth, and Dry Vermouth." }, 
+{ title: "Butterscotch LifeSaver", question: "What are the ingredients for a Butterscotch LifeSaver?", answer: "Butterscotch liqueur, Malibu rum, and Pineapple Juice." }, 
+{ title: "Cable Car", question: "How do you make a Cable Car cocktail?", answer: "Shake Spiced Rum, Orange Curacao, Lemon Juice, and Simple Syrup, then strain." }, 
+{ title: "Caipirinha", question: "What are the primary ingredients for a Caipirinha?", answer: "Cachaca Rum, a fresh lime, and sugar, all muddled together." }, 
+{ title: "Champagne Cocktail", question: "A classic Champagne Cocktail involves placing a bittered sugar cube in a glass and filling it with _____.", answer: "Champagne" }, 
+{ title: "Champs-Elysees", question: "What are the ingredients in a Champs-Elysees cocktail?", answer: "Cognac, Lemon Juice, Simple Syrup, Green Chartreuse, and Angostura bitters." }, 
+{ title: "Cherry Life Saver", question: "List the ingredients for a Cherry Life Saver.", answer: "Midori, Amaretto, Cranberry juice, and a splash of Sweet & Sour." }, 
+{ title: "Chocolate Cake", question: "What two liqueurs make up a Chocolate Cake shot?", answer: "Frangelico and Citrus Vodka." }, 
+{ title: "Clover Club", question: "What are the ingredients for a Clover Club cocktail, including the ingredient that provides texture?", answer: "Gin, Lemon Juice, Raspberry Syrup, Simple Syrup, and an Egg White." }, 
+{ title: "Tom Collins", question: "The _____ is the base spirit for a Tom Collins.", answer: "Gin" }, 
+{ title: "John Collings", question: "The _____ is the base spirit for a John Collins.", answer: "Bourbon" }, 
+{ title: "Colorado Bulldog", question: "How do you make a Colorado Bulldog (or Paralyzer)?", answer: "Pour Vodka, Kahlua, and Cream, then fill with Coke." }, 
+{ title: "Corpse Reviver #2", question: "List the ingredients for a Corpse Reviver #2.", answer: "Gin, Cointreau, Lillet Blanc, Lemon Juice, and an Absinthe rinse." }, 
+{ title: "Cosmopolitan", question: "What are the ingredients for a Cosmopolitan?", answer: "Citrus Vodka, Triple Sec, Lime Juice, and a splash of Cranberry Juice." }, 
+{ title: "Creamsicle", question: "What four ingredients are shaken to create a Creamsicle?", answer: "Vodka, Triple Sec, Orange Juice, and Cream." }, 
+{ title: "Daiquiri", question: "What is the classic recipe for a Daiquiri?", answer: "Rum, Lime Juice, and Simple Syrup." }, 
+{ title: "Dark and Stormy", question: "How do you make a Dark and Stormy?", answer: "Combine Dark Rum, Lime Juice, and Simple Syrup, then fill with Ginger Beer." }, 
+{ title: "Dr. Pepper", question: "What three liqueurs comprise the 'Dr. Pepper' drink?", answer: "Kahlua, Amaretto, and Southern Comfort." }, 
+{ title: "El Diablo", question: "List the ingredients for an El Diablo.", answer: "Tequila, Lime Juice, Creme de Cassis, and Ginger Beer." }, 
+{ title: "El Floridita", question: "What are the ingredients for an El Floridita?", answer: "Rum, Lime Juice, Sweet Vermouth, Grenadine, and White Creme de Cacao." }, 
+{ title: "Espresso Martini", question: "How do you make an Espresso Martini?", answer: "Shake Vodka, Tia Maria, Espresso Coffee, and Simple Syrup, then strain." }, 
+{ title: "Flamingo", question: "What are the ingredients in a Flamingo cocktail?", answer: "Rum, Pineapple Juice, O.J., Sweet & Sour, and a float of Grenadine." }, 
+{ title: "Freddy Fudpucker", question: "A Freddy Fudpucker is a Tequila-based drink filled with Orange Juice and a float of _____.", answer: "Galliano" }, 
+{ title: "French 75", question: "What are the ingredients for a French 75?", answer: "Gin, Lemon Juice, Simple Syrup, and Sparkling Wine." }, 
+{ title: "French Connection I / Beautiful", question: "What two spirits are combined to make a French Connection I (or a 'Beautiful')?", answer: "Grand Marnier and Cognac." }
+    ];
+
+    flashcards = flashcards.sort(() => Math.random() - 0.5);
+
+    let currentIndex = 0;
+    const flashcard = document.getElementById("flashcard");
+    const cardInner = document.getElementById("cardInner");
+    const questionEl = document.getElementById("question");
+    const answerEl = document.getElementById("answer");
+    const titleEl = document.getElementById("cardTitle");
+
+    function renderCard() {
+      const card = flashcards[currentIndex];
+      questionEl.textContent = card.question;
+      answerEl.textContent = card.answer;
+      titleEl.textContent = card.title;
+      flashcard.classList.remove("flipped");
+      cardInner.style.transform = "rotateY(0deg)";
+    }
+
+    function prevCard() {
+      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+      renderCard();
+    }
+
+    function nextCard() {
+      currentIndex = (currentIndex + 1) % flashcards.length;
+      renderCard();
+    }
+
+    let startX = null;
+    let deltaX = 0;
+    let swiping = false;
+    let isSwiping = false;
+
+    titleEl.addEventListener("click", () => {
+        const utterance = new SpeechSynthesisUtterance(titleEl.textContent);
+        utterance.lang = "en-US"; // You can change this to "es-ES" or another locale
+        window.speechSynthesis.speak(utterance);
+    });
+
+
+    flashcard.addEventListener("click", () => {
+      if (!isSwiping) {
+        flashcard.classList.toggle("flipped");
+        if (flashcard.classList.contains("flipped")) {
+          cardInner.style.transform = "rotateY(180deg)";
+        } else {
+          cardInner.style.transform = "rotateY(0deg)";
+        }
+      }
+    });
+
+    flashcard.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      cardInner.style.transition = "none";
+      titleEl.style.transition = "opacity 0.3s ease";
+      swiping = true;
+      isSwiping = false;
+    });
+
+    flashcard.addEventListener("touchmove", (e) => {
+      if (!swiping) return;
+      deltaX = e.touches[0].clientX - startX;
+      cardInner.style.transform = `translateX(${deltaX}px)`;
+      const opacity = 1 - Math.min(Math.abs(deltaX) / 150, 1);
+      titleEl.style.opacity = opacity;
+      if (Math.abs(deltaX) > 10) isSwiping = true;
+    });
+
+    flashcard.addEventListener("touchend", () => {
+      if (!swiping) return;
+      swiping = false;
+      const threshold = 120;
+      cardInner.style.transition = "transform 0.3s ease";
+
+      if (Math.abs(deltaX) > threshold) {
+        const direction = deltaX > 0 ? "right" : "left";
+        cardInner.style.transform = `translateX(${direction === "right" ? "100%" : "-100%"})`;
+        titleEl.style.opacity = 0;
+
+        setTimeout(() => {
+          direction === "right" ? prevCard() : nextCard();
+          cardInner.style.transition = "none";
+          cardInner.style.transform = `translateX(${direction === "right" ? "-100%" : "100%"})`;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              cardInner.style.transition = "transform 0.3s ease";
+              cardInner.style.transform = "translateX(0)";
+              titleEl.style.opacity = 1;
+            });
+          });
+        }, 300);
+      } else {
+        cardInner.style.transform = "translateX(0)";
+        titleEl.style.opacity = 1;
+      }
+
+      deltaX = 0;
+    });
+
+    renderCard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #000, #2c003e);
+      color: #ffe082;
+      text-align: center;
+    }
+
+    h2 {
+      color: #ffca28;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+    }
+
+    .score-summary {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .message {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+
+    .progress-bar-container {
+      width: 80%;
+      max-width: 400px;
+      height: 25px;
+      background: #333;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 1rem;
+      box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, #ff6d00, #ffca28);
+      width: 0;
+      transition: width 1s ease;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-top: 2rem;
+    }
+
+    button {
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 3px 15px rgba(255, 87, 34, 0.5);
+      transition: transform 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .retry-btn {
+      background: linear-gradient(to right, #d50000, #ff6d00);
+    }
+
+    .home-btn {
+      background: linear-gradient(to right, #00695c, #26a69a);
+      box-shadow: 0 3px 15px rgba(38, 166, 154, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <h2>Your Results</h2>
+  <div class="score-summary" id="scoreSummary"></div>
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="message" id="message"></div>
+
+  <div class="buttons">
+    <button class="retry-btn" onclick="location.href='quiz.html'">Try Again</button>
+    <button class="home-btn" onclick="location.href='index.html'">Home</button>
+  </div>
+
+  <script>
+    // Parse query parameters
+    const params = new URLSearchParams(window.location.search);
+    const score = parseInt(params.get("score") || "0");
+    const total = parseInt(params.get("total") || "1");
+
+    const percentage = Math.round((score / total) * 100);
+    let message = "";
+
+    if (percentage >= 80) message = "Excellent!";
+    else if (percentage >= 60) message = "Nice Try!";
+    else message = "Keep Practicing!";
+
+    // Update UI
+    document.getElementById("scoreSummary").textContent = `You got ${score} out of ${total} correct (${percentage}%)`;
+    document.getElementById("message").textContent = message;
+
+    // Animate progress bar
+    const bar = document.getElementById("progressBar");
+    setTimeout(() => {
+      bar.style.width = percentage + "%";
+    }, 200);
+  </script>
+</body>
+</html>

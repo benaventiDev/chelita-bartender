@@ -77,6 +77,7 @@
       font-size: 1.5rem;
       box-sizing: border-box;
       color: #ffe082;
+      overflow: hidden; 
     }
     .card-front::after {
       content: 'Tap to see details';
@@ -204,14 +205,14 @@
 
   <script>
     let flashcards = [
-      /*{title: "Surfer On Acid",
+      {title: "Surfer On Acid",
 ingredients: [
 "1 oz Jagermeister", "1 oz Malibu Rum", "2 oz Pineapple"
 ],
 method: "Shake/Strain",
 glass: "Rocks",
 garnish: "None",
-},*/
+},
 {title: "Singapore Sling",
 ingredients: [
 "1 oz Gin ", "1 oz Pineapple Juice", "3/4 oz Triple Sec", "3/4 oz Lime Juice ", "1/2 oz Cherry Brandy", "1/4 oz Benedictine", "Dash Of Bitters"
@@ -219,7 +220,7 @@ ingredients: [
 method: "Shake/Strain",
 glass: "Collins",
 garnish: "Orange/Cherry",
-}/*,
+},
 {title: "French Connection I",
 ingredients: [
 "2 oz Grand Marnier", "1 oz Amaretto"
@@ -542,7 +543,7 @@ garnish: "Lemon Twist",
 },
 {title: "Long Island Iced Tea",
 ingredients: [
-"1/2 oz Vodka", "1/2 oz Gin", "1/2 oz Rum", "1/2 oz Tequila", "1/2 oz Triple Sec", "1 oz Sweety Sour"
+"1/2 oz Vodka", "1/2 oz Gin", "1/2 oz Rum", "1/2 oz Tequila", "1/2 oz Triple Sec", "1 oz Sweet and Sour"
 ],
 method: "Pour",
 glass: "Collins",
@@ -579,7 +580,7 @@ ingredients: [
 method: "Stir/Strain",
 glass: "DBI Rocks",
 garnish: "Lemon Twist",
-}*/
+}
     ];
 
     // Shuffle
@@ -617,67 +618,50 @@ garnish: "Lemon Twist",
     }
   }
 
-  function formatBack(card) {function formatBack(card) {
-    return `
-      <div id="backContent" style="font-size:18px; text-align:left; max-height:100%; line-height:1.35;">
-        
-        <div style="color: #FFC107; font-weight:bold;">Ingredients:</div>
-        <div style="color:#FFF9C4; margin-left:8px;">
-          ${card.ingredients.map(i => "• " + prettyFractions(i)).join("<br>")}
-        </div>
+  function autoShrinkText() {
+  const container = answerEl;               // the back card face
+  const content = document.getElementById("backContent");
+  if (!content) return;
 
-        <br>
+  let fontSize = 18;                        // starting size
+  content.style.fontSize = fontSize + "px";
 
-        <div style="color: #FFC107; font-weight:bold;">Method:</div>
-        <div style="color:#FFF9C4; margin-left:8px;">
-          ${prettyFractions(card.method)}
-        </div>
+  const maxHeight = container.clientHeight - 20; // padding space
 
-        <br>
-
-        <div style="color: #FFC107; font-weight:bold;">Glass:</div>
-        <div style="color:#FFF9C4; margin-left:8px;">
-          ${card.glass}
-        </div>
-
-        <br>
-
-        <div style="color: #FFC107; font-weight:bold;">Garnish:</div>
-        <div style="color:#FFF9C4; margin-left:8px;">
-          ${prettyFractions(card.garnish)}
-        </div>
-
-      </div>
-    `;
+  // If content overflows, shrink until it fits
+  while (content.offsetHeight > maxHeight && fontSize > 10) {
+    fontSize -= 1;
+    content.style.fontSize = fontSize + "px";
   }
+}
 
+
+  
+  function formatBack(card) {
   return `
-    <div style="font-size:1rem; text-align:left; max-height:100%; overflow-y:auto; line-height:1.35;">
+    <div id="backContent" style="line-height:1.32; text-align:left;">
       
       <div style="color: #FFC107; font-weight:bold;">Ingredients:</div>
       <div style="color:#FFF9C4; margin-left:8px;">
         ${card.ingredients.map(i => "• " + prettyFractions(i)).join("<br>")}
       </div>
-
       <br>
 
       <div style="color: #FFC107; font-weight:bold;">Method:</div>
       <div style="color:#FFF9C4; margin-left:8px;">
         ${prettyFractions(card.method)}
       </div>
-
       <br>
 
       <div style="color: #FFC107; font-weight:bold;">Glass:</div>
       <div style="color:#FFF9C4; margin-left:8px;">
         ${card.glass}
       </div>
-
       <br>
 
       <div style="color: #FFC107; font-weight:bold;">Garnish:</div>
       <div style="color:#FFF9C4; margin-left:8px;">
-        ${prettyFractions(card.garnish)}
+        ${card.garnish}
       </div>
 
     </div>
@@ -685,36 +669,33 @@ garnish: "Lemon Twist",
 }
 
     
-  
+    function renderCard() {
+      const card = flashcards[currentIndex];
 
+      // Front: only drink name
+      questionEl.textContent = card.title;
 
+      // Back: full details
+      answerEl.innerHTML = formatBack(card);
 
+      // Title above card
+      titleEl.textContent = card.title;
 
-function renderCard() {
-  const card = flashcards[currentIndex];
+      // Reset flip
+      flashcard.classList.remove("flipped");
+      cardInner.style.transform = "rotateY(0deg)";
 
-  // Front: only drink name
-  questionEl.textContent = card.title;
-
-  // Back: full details
-  answerEl.innerHTML = formatBack(card);
-
-  // Title above card
-  titleEl.textContent = card.title;
-
-  // Reset flip
-  flashcard.classList.remove("flipped");
-  cardInner.style.transform = "rotateY(0deg)";
-
-  // After content is rendered, shrink text if needed
-  setTimeout(() => {
-    const backContent = document.getElementById("backContent");
-    if (backContent) {
-      autoResizeText(backContent);
+      // Resize after DOM updates
+      setTimeout(() => {
+        autoShrinkText();
+      }, 30);
     }
-  }, 50);
-}
 
+
+
+
+
+    
 
     function prevCard() {
       currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;

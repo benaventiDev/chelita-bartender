@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #2c003e, #000000);
+      padding: 1rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+    h2 {
+      margin-top: 0.5rem;
+      margin-bottom: 0.2rem;
+      font-size: 2rem;
+      color: #ffca28;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    }
+    h3 {
+      margin-top: 0.2rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      color: #fff59d;
+      font-weight: normal;
+      text-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
+      transition: opacity 0.3s ease;
+    }
+    .card {
+      perspective: 1000px;
+      width: calc(100% - 2rem);
+      max-width: 400px;
+      height: 50vh;
+      margin-top: 2vh;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      touch-action: pan-y;
+      user-select: none;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+    }
+    .flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background: radial-gradient(circle, #212121, #000000);
+      border: 2px solid #ffc107;
+      border-radius: 20px;
+      box-shadow: 0 6px 25px rgba(255, 193, 7, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      box-sizing: border-box;
+      color: #ffe082;
+    }
+    .card-front::after {
+      content: 'Tap to see details';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
+      pointer-events: none;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    .card-back::after {
+      content: 'Tap to see the name';
+      position: absolute;
+      bottom: 8px;
+      font-size: 0.7rem;
+      color: #ffffff99;
+      pointer-events: none;
+    }
+    .navigation {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 5vh;
+    }
+    .next-btn,
+    .prev-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .next-btn:active,
+    .prev-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+    .next-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.3rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #d50000, #ff6d00);
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 3px 15px rgba(255, 87, 34, 0.5);
+      cursor: pointer;
+    }
+    .next-btn:hover {
+      background: linear-gradient(to right, #b71c1c, #e65100);
+    }
+    .prev-btn {
+      width: 60%;
+      margin: 0 auto;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #37474f;
+      color: #fff9c4;
+      cursor: pointer;
+    }
+    .prev-btn:hover {
+      background: #263238;
+    }
+    .footer-message {
+      position: fixed;
+      bottom: 8px;
+      right: 12px;
+      font-size: 0.7rem;
+      color: #ffffffcc;
+      opacity: 0.6;
+    }
+    .home-btn {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffc107;
+      color: #ffc107;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+      transition: background 0.2s ease, transform 0.2s ease;
+      z-index: 50;
+    }
+    .home-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    .home-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffc107;
+    }
+  </style>
+</head>
+<body>
+  <div class="home-btn" onclick="location.href='index.html'">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+  </div>
+
+  <h2>Card Practice</h2>
+  <h3 id="cardTitle">Drink Title</h3>
+
+  <div class="card" id="flashcard">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front" id="question">Loading...</div>
+      <div class="card-face card-back" id="answer">Answer</div>
+    </div>
+  </div>
+
+  <div class="navigation">
+    <button class="next-btn" onclick="nextCard()">Next →</button>
+    <button class="prev-btn" onclick="prevCard()">← Back</button>
+  </div>
+
+  <script>
+    let flashcards = [
+      {title: "Surfer On Acid",
+ingredients: [
+"1 oz Jagermeister", "1 oz Malibu Rum", "2 oz Pineapple"
+],
+method: "Shake/Strain",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Singapore Sling",
+ingredients: [
+"1 oz Gin ", "1 oz Pineapple Juice", "3/4 oz Triple Sec", "3/4 oz Lime Juice ", "1/2 oz Cherry Brandy", "1/4 oz Benedictine", "Dash Of Bitters"
+],
+method: "Shake/Strain",
+glass: "Collins",
+garnish: "Orange/Cherry",
+},
+{title: "French Connection 1 ",
+ingredients: [
+"2 oz Grand Marnier", "1 oz Amaretto"
+],
+method: "Pour",
+glass: "Collins",
+garnish: "Mint",
+},
+{title: "El Diablo",
+ingredients: [
+"2 oz Tequila", "3/4 oz Lime Juice", "3/4 oz Creme De Cassis", "Fill With Ginger Beer"
+],
+method: "Pour",
+glass: "Snifter",
+garnish: "None",
+},
+{title: "French 75",
+ingredients: [
+"1 oz Gin", "1/2 Lemon Juice", "1/2Simple Syrup", "Fill With Sparkling Wine"
+],
+method: "Pour",
+glass: "Champagne",
+garnish: "Lemon Twist",
+},
+{title: "Last Word",
+ingredients: [
+"3/4 oz Gin", "3/4 oz Marachino Liqueur", "3/4 oz Green Chartreuse", "3/4 oz Lime Juice"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "None",
+},
+{title: "Lemon Drop",
+ingredients: [
+"2 oz Vodka", "3/4 oz Triple Sec", "3/4 Oz. Lemon Juice", "1/4 oz Simple Syrup", "Rim Glass With Sugar"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Lemon Twist",
+},
+{title: "Brandy Alexander",
+ingredients: [
+"1 1/2 oz Brandy", "1 oz Dark Creme Cacao", "1 oz Cream"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Nutmeg",
+},
+{title: "French Connection Ii",
+ingredients: [
+"2 oz Cognac", "1 oz Amaretto"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Rob Roy",
+ingredients: [
+"2 oz Scotch", "1 oz Sweet Vermouth", "2 Dashes Of Bitters"
+],
+method: "Stir/Strain",
+glass: "Cocktail",
+garnish: "Cherry",
+},
+{title: "Orgasmo",
+ingredients: [
+"1 oz Baileys", "1/2 oz Kahlua", "1/2 oz Amaretto", "Fill With Cream"
+],
+method: "Pour",
+glass: "DBI Rocks",
+garnish: "None",
+},
+{title: "Toasted Almond",
+ingredients: [
+"1 1/2 Amaretto", "1 oz Kahlua", "1 oz Cream"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "None",
+},
+{title: "Separator",
+ingredients: [
+"2 oz Brandy", "1 oz Dark Creme De Cacao", "Fill With Cream"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Mai Tai (1944)",
+ingredients: [
+"2 oz Aged Rum", "3/4 oz Lime Juice", "1/2 oz Orange Curacao ", "1/4 oz Orgeat Syrup"
+],
+method: "Shake/Strain",
+glass: "DBI Rocks",
+garnish: "Mint",
+},
+{title: "Bramble",
+ingredients: [
+"2 oz Gin ", "3/4 oz Lemon Juice", "1/2 Simple Syrup", "1/4 oz Creme De Cassis"
+],
+method: "Shake/Strain",
+glass: "Collins",
+garnish: "Mint",
+},
+{title: "Penicillin Cocktail",
+ingredients: [
+"2 oz Scotch", "3/4 oz Lemon Juice ", "3/4 Honey", "Float Islay Scotch On Top"
+],
+method: "Shake/Strain",
+glass: "DBI Rocks",
+garnish: "Ginger",
+},
+{title: "Ramos Fizz",
+ingredients: [
+"1 oz Gin", "1 oz Simple Syrup", "1/2 Lemon Juice", "1/2 Lime Juice", "Egg White 3 Drops Of Orange Flower", "Water Dd Soda On Top"
+],
+method: "Dry Shake",
+glass: "Collins",
+garnish: "None",
+},
+{title: "Sloe Comportable Screw",
+ingredients: [
+"1 oz Sloe Gin", "1 oz Sloe Gin", "Fill With O.J."
+],
+method: "Pour",
+glass: "Collins",
+garnish: "None",
+},
+{title: "God Father",
+ingredients: [
+"2 oz Schotch", "1 oz Amaertto"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Grasshopper",
+ingredients: [
+"1 oz Green Creme De Methe", "1 oz White Creme De Cacao", "1 1/2 oz Cream"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "None",
+},
+{title: "Alabama Slammer",
+ingredients: [
+"1 oz Sloe Gin", "1 oz Southern Comfort", "1 oz Amaetto", "Fill With O.J."
+],
+method: "Pour",
+glass: "Collins",
+garnish: "Orange/Cherry",
+},
+{title: "Americano",
+ingredients: [
+"1 1/2 oz Campari Liqueur", "1 1/2 oz Sweet Vermouth", "Fill With Soda"
+],
+method: "Pour",
+glass: "DBI rocks",
+garnish: "Orange Twist",
+},
+{title: "Aviation Cocktail",
+ingredients: [
+"2 oz Gin", "3/4 oz Lemon Juice", "1/2 oz  Marachino Liqueur", "1/4 oz Creme De Violett"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Cherry",
+},
+{title: "Negroni",
+ingredients: [
+"1 oz Gin", "1 oz Camparin Liqueur", "1 oz Sweet Vermouth"
+],
+method: "Shake/Strain",
+glass: "DBI rocks",
+garnish: "Orange Twist",
+},
+{title: "Oatmeal Cookie",
+ingredients: [
+"2 oz Baileys", "1/2 oz Butterscotch Schnapps", "1/2 oz Glodschalager"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Blood And Sand",
+ingredients: [
+"1 1/2 oz Scotch", "3/4 oz Sweet Vermouth", "3/4 oz Organge Juice", "1/2 oz Cherry Heering"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Orange Peel",
+},
+{title: "Caipirinha",
+ingredients: [
+"2 oz Cachaca Rum", "1 Fresh Lime", "1 1/2 Tsp Sugar", "Muddle Sugar And Lime Wedges"
+],
+method: "Muddle/Shake",
+glass: "DBI Rocks",
+garnish: "None",
+},
+{title: "Colorado Bulldog",
+ingredients: [
+"1 oz Vodka", "1 oz Kahlua", "2 oz Cream", "Fill With Coke"
+],
+method: "Pour",
+glass: "Collins",
+garnish: "None",
+},
+{title: "Clover Club",
+ingredients: [
+"2 oz Gin", "3/4 oz Lemon Juice", "1/2 oz Raspberry Syrup", "1/4 Simple Syrup", "1 Egg White"
+],
+method: "Dry Shake",
+glass: "Cocktail",
+garnish: "Optional",
+},
+{title: "Chocolate Cake",
+ingredients: [
+"2 oz Frangelico", "1 oz Citrus Vodka"
+],
+method: "Shake/Strain",
+glass: "Rocks",
+garnish: "Sugared Rim / Sugared Lemon",
+},
+{title: "Aperol Sprits",
+ingredients: [
+"3 oz Prosecco", "2 oz Aperol", "1 oz Soda Water"
+],
+method: "Pour",
+glass: "Wine Glass",
+garnish: "Orange Twist",
+},
+{title: "Dr. Pepper",
+ingredients: [
+"1 oz Kahlua", "1 oz Amaretto", "1 oz Southern Comfort"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Godmother",
+ingredients: [
+"2 oz Vodka", "1 oz Amaertto"
+],
+method: "Pour",
+glass: "Rocks",
+garnish: "None",
+},
+{title: "Cherry Life Saver",
+ingredients: [
+"1 oz Midori", "1 oz Amaretto", "Fill With Cranberry", "Spash Sweet And Sour"
+],
+method: "Pour",
+glass: "DBI Rocks",
+garnish: "Cherry",
+},
+{title: "Golden Fizz",
+ingredients: [
+"2 oz Gin", "1 oz Lemon Juice", "1 oz Siemple Syrup", "1 oz Heavy Cream", "1 Egg Yolk", "Add Soda After Straining"
+],
+method: "Dry Shake",
+glass: "Collins",
+garnish: "None",
+},
+{title: "Daiquiri",
+ingredients: [
+"2 oz Rum", "3/4 oz Lime Jice", "3/4 oz Simple Sysrup"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Lime Wheel",
+},
+{title: "Dark And Storymy",
+ingredients: [
+"2 oz Dark Rum", "3/4 oz Lime Juice", "3/4 oz Simple Syrup", "Fill With Ginger Beer"
+],
+method: "Shake/Strain",
+glass: "Collins",
+garnish: "Lime",
+},
+{title: "Woo Woo",
+ingredients: [
+"1 oz Vodka", "1 oz Peach Shnapps", "Fill With O.J."
+],
+method: "Pour",
+glass: "Collins",
+garnish: "None",
+},
+{title: "Zombie",
+ingredients: [
+"1 oz Light Rum", "1Oz Amber Rum", "1 oz Apricot Brancy", "1 oz Pinapple Juice", "1 oz O.J.", "1 oz Sweet And Sour", "Dash Of Grenadine", "Float Myers Rum And 151 Rum"
+],
+method: "Pour",
+glass: "Collins",
+garnish: "Cherry",
+},
+{title: "Yellow Bird",
+ingredients: [
+"1 oz Rum", "1 oz Galliano", "1 oz Creme De Banana", "1 oz Pineapple Juice", "Fill With O.J."
+],
+method: "Pour",
+glass: "Collins",
+garnish: "None",
+},
+{title: "Ward Eight",
+ingredients: [
+"2 oz Rye", "3/4 oz Lemon Juice", "1/2 oz Grenadine", "1/4 oz Simple Syrup", "2 Dashes Of Orange Bitters"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Cherry",
+},
+{title: "Vesper Martini",
+ingredients: [
+"1 1/1 Gin", "1 oz Vodka", "1/2 oz  Lillet Blanc"
+],
+method: "Stir/Strain",
+glass: "Cocktail",
+garnish: "Lemon Twist",
+},
+{title: "Long Island Iced Tea",
+ingredients: [
+"1/2 oz Vodka", "1/2 oz Gin", "1/2 oz Rum", "1/2 oz Tequila", "1/2 oz Triple Sec", "1 oz Sweety Sour"
+],
+method: "Pour",
+glass: "Collins",
+garnish: "Lemon",
+},
+{title: "Lynchburg Lemonade",
+ingredients: [
+"1 oz Jack Daniels", "1/2 oz Triple Sec", "1/2 oz Lemon Juice", "Fill With Seven Up"
+],
+method: "Pour",
+glass: "Collins",
+garnish: "Lemon",
+},
+{title: "Cable Car",
+ingredients: [
+"2 oz Spiced Rum", "3/4 oz Orange Curacao", "3/4 oz Lemon Juice", "1/4 oz Simple Syrup"
+],
+method: "Shake/Strain",
+glass: "Cocktail",
+garnish: "Cinnamon/Sugar Rim",
+},
+{title: "Manhattan",
+ingredients: [
+"2 oz Bourbon", "1 oz Sweet Vermouth", "2 Dashes Of Bitters"
+],
+method: "Stir/Strain",
+glass: "Cocktail",
+garnish: "Cherry",
+},
+{title: "Sazerac",
+ingredients: [
+"2 oz Bourbon", "1/2 oz Simple Syrup", "2 Dashes Prycharis", "2 Dashes Angostura", "Pernod Rinse", 
+],
+method: "Stir/Strain",
+glass: "DBI Rocks",
+garnish: "Lemon Twist",
+}
+    ];
+
+    // Shuffle
+    flashcards = flashcards.sort(() => Math.random() - 0.5);
+
+    let currentIndex = 0;
+    const flashcard = document.getElementById("flashcard");
+    const cardInner = document.getElementById("cardInner");
+    const questionEl = document.getElementById("question");
+    const answerEl = document.getElementById("answer");
+    const titleEl = document.getElementById("cardTitle");
+
+    function prettyFractions(text) {
+      return text
+        .replace(/\b1\/2\b/g, "½")
+        .replace(/\b1\/4\b/g, "¼")
+        .replace(/\b3\/4\b/g, "¾")
+        .replace(/\b1\/3\b/g, "⅓")
+        .replace(/\b2\/3\b/g, "⅔")
+        .replace(/\b1\s+1\/2\b/g, "1½")
+        .replace(/\b1\s+3\/4\b/g, "1¾")
+        .replace(/\b2\s+1\/2\b/g, "2½")
+        .replace(/\b2\s+3\/4\b/g, "2¾");
+  }
+
+
+  function formatBack(card) {
+  return `
+    <div style="font-size:1rem; text-align:left; max-height:100%; overflow-y:auto; line-height:1.35;">
+      
+      <div style="color: #FFC107; font-weight:bold;">Ingredients:</div>
+      <div style="color:#FFF9C4; margin-left:8px;">
+        ${card.ingredients.map(i => "• " + prettyFractions(i)).join("<br>")}
+      </div>
+
+      <br>
+
+      <div style="color: #FFC107; font-weight:bold;">Method:</div>
+      <div style="color:#FFF9C4; margin-left:8px;">
+        ${prettyFractions(card.method)}
+      </div>
+
+      <br>
+
+      <div style="color: #FFC107; font-weight:bold;">Glass:</div>
+      <div style="color:#FFF9C4; margin-left:8px;">
+        ${card.glass}
+      </div>
+
+      <br>
+
+      <div style="color: #FFC107; font-weight:bold;">Garnish:</div>
+      <div style="color:#FFF9C4; margin-left:8px;">
+        ${prettyFractions(card.garnish)}
+      </div>
+
+    </div>
+  `;
+}
+
+    
+  
+
+
+
+
+    function renderCard() {
+      const card = flashcards[currentIndex];
+
+      // Front: only drink name
+      questionEl.textContent = card.title;
+
+      // Back: full details
+      answerEl.innerHTML = formatBack(card);
+
+      // Title above card
+      titleEl.textContent = card.title;
+
+      // Reset flip
+      flashcard.classList.remove("flipped");
+      cardInner.style.transform = "rotateY(0deg)";
+    }
+
+    function prevCard() {
+      currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+      renderCard();
+    }
+
+    function nextCard() {
+      currentIndex = (currentIndex + 1) % flashcards.length;
+      renderCard();
+    }
+
+    // Speech on title click
+    titleEl.addEventListener("click", () => {
+      const utterance = new SpeechSynthesisUtterance(titleEl.textContent);
+      utterance.lang = "en-US";
+      window.speechSynthesis.speak(utterance);
+    });
+
+    // Swipe/flip logic
+    let startX = null;
+    let deltaX = 0;
+    let swiping = false;
+    let isSwiping = false;
+
+    flashcard.addEventListener("click", () => {
+      if (!isSwiping) {
+        flashcard.classList.toggle("flipped");
+        if (flashcard.classList.contains("flipped")) {
+          cardInner.style.transform = "rotateY(180deg)";
+        } else {
+          cardInner.style.transform = "rotateY(0deg)";
+        }
+      }
+    });
+
+    flashcard.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+      cardInner.style.transition = "none";
+      titleEl.style.transition = "opacity 0.3s ease";
+      swiping = true;
+      isSwiping = false;
+    });
+
+    flashcard.addEventListener("touchmove", (e) => {
+      if (!swiping) return;
+      deltaX = e.touches[0].clientX - startX;
+      cardInner.style.transform = `translateX(${deltaX}px)`;
+      const opacity = 1 - Math.min(Math.abs(deltaX) / 150, 1);
+      titleEl.style.opacity = opacity;
+      if (Math.abs(deltaX) > 10) isSwiping = true;
+    });
+
+    flashcard.addEventListener("touchend", () => {
+      if (!swiping) return;
+      swiping = false;
+      const threshold = 120;
+      cardInner.style.transition = "transform 0.3s ease";
+
+      if (Math.abs(deltaX) > threshold) {
+        const direction = deltaX > 0 ? "right" : "left";
+        cardInner.style.transform = `translateX(${direction === "right" ? "100%" : "-100%"})`;
+        titleEl.style.opacity = 0;
+
+        setTimeout(() => {
+          direction === "right" ? prevCard() : nextCard();
+          cardInner.style.transition = "none";
+          cardInner.style.transform = `translateX(${direction === "right" ? "-100%" : "100%"})`;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              cardInner.style.transition = "transform 0.3s ease";
+              cardInner.style.transform = "translateX(0)";
+              titleEl.style.opacity = 1;
+            });
+          });
+        }, 300);
+      } else {
+        cardInner.style.transform = "translateX(0)";
+        titleEl.style.opacity = 1;
+      }
+
+      deltaX = 0;
+    });
+
+    // Initial card
+    renderCard();
+  </script>
+</body>
+</html>
